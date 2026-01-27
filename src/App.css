@@ -1239,3 +1239,276 @@ th {
 
 .event-banner.holiday .event-text { color: #7c3aed; }
 .event-banner.team-out .event-text { color: #0d9488; }
+
+/* ========================================
+   MOBILE RESPONSIVE DESIGN
+   ======================================== */
+
+/* Tablet & Below (≤ 768px) */
+@media screen and (max-width: 768px) {
+  .app-container {
+    padding: 1rem;
+  }
+
+  .app-header h1 {
+    font-size: 1.75rem;
+  }
+
+  /* Stats Cards - Stack on Mobile */
+  .stats-cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .card {
+    padding: 1.5rem;
+  }
+
+  .card .number {
+    font-size: 2.25rem;
+  }
+
+  /* Upload Section Mobile */
+  .upload-section {
+    padding: 1.5rem;
+    min-height: 50vh;
+  }
+
+  .upload-box {
+    max-width: 100%;
+    min-height: 250px;
+    padding: 2rem 1.5rem;
+  }
+
+  .custom-file-upload .icon {
+    font-size: 3rem;
+  }
+
+  .custom-file-upload .text {
+    font-size: 1.1rem;
+  }
+
+  /* Section Header Mobile */
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 1rem;
+  }
+
+  .export-group {
+    border-right: none;
+    border-bottom: 1.5px solid rgba(0,0,0,0.05);
+    padding-right: 0;
+    padding-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .view-toggles {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .toggle-btn {
+    flex: 1;
+  }
+
+  /* Event Manager Mobile */
+  .event-form.modern-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .event-manager-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .event-chips-container.mini {
+    width: 100%;
+  }
+
+  /* Matrix Table Mobile */
+  .matrix-scroll-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .matrix-table-premium {
+    min-width: 800px;
+  }
+
+  .matrix-header-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .matrix-legend-premium {
+    flex-wrap: wrap;
+  }
+
+  /* Filter Controls Touch-Friendly */
+  .col-filter-select {
+    min-width: 90px;
+    padding: 0.6rem 2rem 0.6rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .clear-filters-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.85rem;
+  }
+
+  /* Table Mobile */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  th, td {
+    padding: 0.85rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Small Mobile (≤ 480px) */
+@media screen and (max-width: 480px) {
+  .app-container {
+    padding: 0.75rem;
+  }
+
+  .app-header {
+    padding-left: 0;
+  }
+
+  .app-header h1 {
+    font-size: 1.5rem;
+  }
+
+  /* Mini Stats Cards */
+  .card {
+    padding: 1.25rem;
+  }
+
+  .card .icon-orb {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+  }
+
+  .card .number {
+    font-size: 2rem;
+  }
+
+  .card h3 {
+    font-size: 0.75rem;
+  }
+
+  /* Compact Upload */
+  .upload-box {
+    min-height: 220px;
+    padding: 1.5rem 1rem;
+    border-radius: 16px;
+  }
+
+  .custom-file-upload .icon {
+    font-size: 2.5rem;
+  }
+
+  .custom-file-upload .text {
+    font-size: 1rem;
+  }
+
+  /* Compact Buttons */
+  .export-btn {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.85rem;
+  }
+
+  .toggle-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  /* Compact Event Manager */
+  .event-form.modern-grid {
+    gap: 0.85rem;
+  }
+
+  .form-group input,
+  .premium-date-input input {
+    padding: 0.75rem 0.85rem;
+    font-size: 0.85rem;
+  }
+
+  .primary-action {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.85rem;
+  }
+
+  /* Compact Matrix */
+  .matrix-card-glass {
+    padding: 1rem;
+  }
+
+  .matrix-title h3 {
+    font-size: 1.1rem;
+  }
+
+  .matrix-legend-premium {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Touch-Friendly Filters */
+  .col-filter-select {
+    min-width: 85px;
+    padding: 0.65rem 1.75rem 0.65rem 0.65rem;
+  }
+
+  .header-slot {
+    gap: 0.5rem;
+  }
+
+  .emp-name {
+    font-size: 0.75rem;
+  }
+
+  /* Compact Table */
+  th, td {
+    padding: 0.75rem 0.65rem;
+    font-size: 0.8rem;
+  }
+
+  .status-badge {
+    padding: 4px 10px;
+    font-size: 0.7rem;
+  }
+}
+
+/* Landscape Phones (≤ 812px height, landscape) */
+@media screen and (max-height: 812px) and (orientation: landscape) {
+  .upload-section {
+    min-height: 40vh;
+  }
+
+  .upload-box {
+    min-height: 180px;
+  }
+
+  .stats-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
