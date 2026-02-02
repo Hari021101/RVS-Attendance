@@ -5,6 +5,7 @@ import StatsCards from './StatsCards';
 import ViewToggle from './ViewToggle';
 import EmployeeSummary from './EmployeeSummary';
 import DateGroupedAttendance from './DateGroupedAttendance';
+import AnalyticsCharts from './AnalyticsCharts';
 import { exportComprehensiveExcel, exportComprehensivePDF } from '../utils/exportUtils';
 import { calculateMatrixData } from '../utils/attendanceUtils';
 
@@ -93,7 +94,7 @@ const AttendanceDashboard = ({
           </div>
         </div>
 
-        {viewMode !== 'summary' && (
+        {viewMode === 'detailed' && (
           <div className="event-manager-section top-manager premium-control-panel">
             <div className="event-manager-header">
                 <div className="text-content">
@@ -156,6 +157,8 @@ const AttendanceDashboard = ({
         <div className="table-container">
           {viewMode === 'summary' ? (
             <EmployeeSummary summaryData={summaryData} />
+          ) : viewMode === 'analytics' ? (
+            <AnalyticsCharts attendanceData={attendanceData} summaryData={summaryData} />
           ) : (
             <DateGroupedAttendance 
               data={attendanceData} 

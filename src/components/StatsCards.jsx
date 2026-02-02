@@ -5,7 +5,7 @@ const StatsCards = ({ teamStats }) => {
 
   return (
     <div className="stats-cards">
-      <div className="card">
+      <div className="card total">
         <div className="icon-orb">👥</div>
         <h3>Total Employees</h3>
         <div className="number">{teamStats.totalEmployees || 0}</div>

@@ -15,6 +15,12 @@ const ViewToggle = ({ viewMode, setViewMode }) => {
         >
         Detailed View
         </button>
+        <button 
+        className={`toggle-btn ${viewMode === 'analytics' ? 'active' : ''}`}
+        onClick={() => setViewMode('analytics')}
+        >
+        Analytics
+        </button>
     </div>
   );
 };
