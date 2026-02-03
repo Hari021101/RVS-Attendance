@@ -1,5 +1,9 @@
 # React + Vite
 
+[![Deploy with Vercel](https://vercel.com/button)](https://rvs-attendance.vercel.app/)
+
+[Live Demo](https://rvs-attendance.vercel.app/)
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
