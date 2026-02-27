@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatTimeToAMPM } from '../utils/attendanceUtils';
 
 const DateGroupedAttendance = ({ 
   data, 
@@ -87,6 +88,15 @@ const DateGroupedAttendance = ({
                 const isSunday = dateObj.getDay() === 0;
                 const override = getEventOverride(date);
                 const category = override ? getEventCategory(override.type) : null;
+                const eventLabel = override ? override.label.toUpperCase() : "WEEK-END";
+
+                // Check if anyone worked on this specific holiday/weekend
+                const anyEmployeeWorked = employees.some(name => {
+                    const record = matrix[date][name];
+                    return record && !['Absent', '-'].includes(record.status);
+                });
+
+                const showBanner = (override || isSunday) && !anyEmployeeWorked;
 
                 return (
                   <tr key={date} className={`matrix-row ${isSunday ? 'weekend-row' : ''} ${override ? 'event-row' : ''}`}>
@@ -95,36 +105,30 @@ const DateGroupedAttendance = ({
                         {isSunday && !override && <span className="weekend-tag">SUN</span>}
                         {override && <span className={`event-tag ${category}`}>EVENT</span>}
                     </td>
-                    {override ? (
-                        <td colSpan={employees.length} className="event-display-cell">
-                             <div className={`event-banner ${category}`}>
-                                <span className="event-text">{override.label.toUpperCase()}</span>
+                    {showBanner ? (
+                        <td colSpan={employees.length} className={override ? "event-display-cell" : "weekend-display-cell"}>
+                             <div className={override ? `event-banner ${category}` : "weekend-banner"}>
+                                <span className={override ? "event-text" : "weekend-text"}>{eventLabel}</span>
                              </div>
-                        </td>
-                    ) : isSunday ? (
-                        <td colSpan={employees.length} className="weekend-display-cell">
-                            <div className="weekend-banner">
-                                <span className="weekend-text">WEEK-END</span>
-                            </div>
                         </td>
                     ) : (
                         employees.map(name => {
                             const record = matrix[date][name];
                             const inTime = record?.inTime;
                             const isLate = record?.isLate;
-                            const isAbsent = record?.status === 'Absent';
-                            const hasRecord = !!record;
+                            const isAbsent = record?.status === 'Absent' || !record;
+                            
+                            // On non-working days, non-arrivals show the label instead of ABSENT
+                            const displayValue = (isSunday || override) && isAbsent 
+                                ? eventLabel 
+                                : isAbsent ? 'ABSENT' : formatTimeToAMPM(inTime);
 
                             return (
                                 <td key={name} className="matrix-cell">
-                                    {hasRecord ? (
-                                        <div className={`time-pill ${isLate ? 'late' : isAbsent ? 'absent' : 'ontime'}`}>
-                                            <span className="time">{isAbsent ? 'ABSENT' : inTime}</span>
-                                            {isLate && <span className="late-indicator">!</span>}
-                                        </div>
-                                    ) : (
-                                        <span className="no-record">-</span>
-                                    )}
+                                    <div className={`time-pill ${isLate ? 'late' : isAbsent ? 'absent' : 'ontime'} ${(isSunday || override) && isAbsent ? 'event-muted' : ''}`}>
+                                        <span className="time">{displayValue}</span>
+                                        {isLate && <span className="late-indicator">!</span>}
+                                    </div>
                                 </td>
                             );
                         })

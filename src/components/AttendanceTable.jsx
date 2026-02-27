@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatTimeToAMPM } from '../utils/attendanceUtils';
 
 const AttendanceTable = ({ data }) => {
   if (!data || data.length === 0) return null;
@@ -31,8 +32,8 @@ const AttendanceTable = ({ data }) => {
                 <td>{row['E. Code']}</td>
                 <td className="name-cell">{row['Name']}</td>
                 <td>{row['Attendance Date'] || row['Date'] || ''}</td>
-                <td>{row['InTime'] || '-'}</td>
-                <td>{row['OutTime'] || '-'}</td>
+                <td>{formatTimeToAMPM(row['InTime']) || '-'}</td>
+                <td>{formatTimeToAMPM(row['OutTime']) || '-'}</td>
                 <td>
                   {isLate ? (
                     <span className="late-badge">LATE</span>

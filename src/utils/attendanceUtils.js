@@ -9,6 +9,37 @@ export const parseTime = (timeStr) => {
 };
 
 /**
+ * Helper to format 24h time string or Date to AM/PM format
+ */
+export const formatTimeToAMPM = (timeStr) => {
+  if (!timeStr || typeof timeStr !== "string" || timeStr === "-" || 
+      /ABSENT|WEEK-END|HOLIDAY|WFH|HALF DAY/i.test(timeStr)) return timeStr;
+  
+  try {
+    if (timeStr.includes("AM") || timeStr.includes("PM")) return timeStr;
+
+    const parts = timeStr.split(":");
+    if (parts.length < 2) return timeStr;
+    
+    let hours = parseInt(parts[0], 10);
+    let minutes = parseInt(parts[1], 10);
+    let seconds = parts.length > 2 ? parseInt(parts[2], 10) : 0;
+
+    if (isNaN(hours) || isNaN(minutes)) return timeStr;
+
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const strMinutes = String(minutes).padStart(2, "0");
+    const strSeconds = String(seconds).padStart(2, "0");
+
+    return `${hours}:${strMinutes}:${strSeconds} ${ampm}`;
+  } catch (e) {
+    return timeStr;
+  }
+};
+
+/**
  * Main attendance data processing logic
  */
 export const processAttendanceData = (data, lateCutoffMinutes = 635) => { // Default 10:35 AM
