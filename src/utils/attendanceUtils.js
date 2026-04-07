@@ -42,7 +42,7 @@ export const formatTimeToAMPM = (timeStr) => {
 /**
  * Main attendance data processing logic
  */
-export const processAttendanceData = (data, lateCutoffMinutes = 635) => { // Default 10:35 AM
+export const processAttendanceData = (data, lateCutoffMinutes = 600) => { // Default 10:00 AM
   const uniqueEmployees = new Set();
   const employeeMap = {};
   let totalPresent = 0;
@@ -329,7 +329,7 @@ export const calculateLatePatterns = (attendanceData) => {
     
     // Calculate how late (in minutes)
     const inTimeMinutes = parseTime(row['InTime']);
-    const baseCutoff = 635; // 10:35 AM
+    const baseCutoff = 600; // 10:00 AM
     const lateMinutes = inTimeMinutes - baseCutoff;
     
     if (lateMinutes <= 15) {
