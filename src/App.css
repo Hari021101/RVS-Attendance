@@ -2090,3 +2090,72 @@ th {
 [data-theme='dark'] .react-datepicker__navigation-icon::before {
     border-color: #94a3b8 !important;
 }
+
+/* --- Error Modal --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.error-modal {
+    background: var(--card-bg, #ffffff);
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+    animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid var(--border-color);
+}
+
+.error-modal .modal-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+}
+
+.error-modal h3 {
+    color: var(--text-dark, #1f2937);
+    margin: 0 0 1rem 0;
+    font-size: 1.4rem;
+    font-weight: 800;
+}
+
+.error-modal p {
+    color: var(--text-light, #6b7280);
+    margin: 0 0 1.5rem 0;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.error-modal .btn.primary {
+    background: #ef4444; /* red-500 */
+    color: white;
+    padding: 0.85rem 2rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.error-modal .btn.primary:hover {
+    background: #dc2626; /* red-600 */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3);
+}
+
+.error-modal .btn.primary:active {
+    transform: translateY(0);
+}

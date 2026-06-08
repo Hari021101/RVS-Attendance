@@ -49,7 +49,10 @@ export const processAttendanceData = (data, lateCutoffMinutes = 600) => { // Def
   let totalAbsent = 0;
   let totalLate = 0;
 
-  const processedData = data
+  // Track if anyone is present on a given date
+  const datePresenceMap = {};
+
+  const initialProcessedData = data
     .filter(row => {
       // Filter out invalid rows (headers, empty codes)
       const eCode = row['E. Code'] || row['Emp Code'] || row['Employee Code'];
@@ -90,27 +93,12 @@ export const processAttendanceData = (data, lateCutoffMinutes = 600) => { // Def
         }
       }
 
-      // Initialize/Update employee summary
-      if (!employeeMap[eCode]) {
-        employeeMap[eCode] = {
-          code: eCode,
-          name: row['Name'],
-          present: 0,
-          absent: 0,
-          late: 0
-        };
+      // Track if anyone is present on this date
+      if (!datePresenceMap[dateStr]) {
+        datePresenceMap[dateStr] = false;
       }
-
       if (status.startsWith('Present')) {
-        employeeMap[eCode].present++;
-        totalPresent++;
-        if (isLate) {
-          employeeMap[eCode].late++;
-          totalLate++;
-        }
-      } else if (status === 'Absent') {
-        employeeMap[eCode].absent++;
-        totalAbsent++;
+        datePresenceMap[dateStr] = true;
       }
 
       return { 
@@ -123,6 +111,48 @@ export const processAttendanceData = (data, lateCutoffMinutes = 600) => { // Def
         isLate 
       };
     });
+
+  // Second pass to apply Holiday logic and calculate stats
+  const processedData = initialProcessedData.map(row => {
+    let finalStatus = row['Status'];
+    
+    // HOLIDAY/WEEKEND LOGIC: If no one is present on this date
+    if (!datePresenceMap[row['Date']]) {
+      const d = new Date(row['Date']);
+      const isWeekendDay = d.getDay() === 0 || d.getDay() === 6;
+      finalStatus = isWeekendDay ? 'Weekend' : 'Holiday';
+    }
+
+    const eCode = row['E. Code'];
+
+    // Initialize/Update employee summary
+    if (!employeeMap[eCode]) {
+      employeeMap[eCode] = {
+        code: eCode,
+        name: row['Name'],
+        present: 0,
+        absent: 0,
+        late: 0
+      };
+    }
+
+    if (finalStatus.startsWith('Present')) {
+      employeeMap[eCode].present++;
+      totalPresent++;
+      if (row.isLate) {
+        employeeMap[eCode].late++;
+        totalLate++;
+      }
+    } else if (finalStatus === 'Absent') {
+      employeeMap[eCode].absent++;
+      totalAbsent++;
+    }
+
+    return { 
+      ...row, 
+      'Status': finalStatus 
+    };
+  });
 
   return {
     processedData,

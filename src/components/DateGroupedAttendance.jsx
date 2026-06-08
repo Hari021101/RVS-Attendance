@@ -85,7 +85,7 @@ const DateGroupedAttendance = ({
             <tbody>
               {dates.map(date => {
                 const dateObj = new Date(date);
-                const isSunday = dateObj.getDay() === 0;
+                const isWeekendDay = dateObj.getDay() === 0 || dateObj.getDay() === 6;
                 const override = getEventOverride(date);
                 const category = override ? getEventCategory(override.type) : null;
                 const eventLabel = override ? override.label.toUpperCase() : "WEEK-END";
@@ -93,22 +93,35 @@ const DateGroupedAttendance = ({
                 // Check if anyone worked on this specific holiday/weekend
                 const anyEmployeeWorked = employees.some(name => {
                     const record = matrix[date][name];
-                    return record && !['Absent', '-'].includes(record.status);
+                    return record && !['Absent', '-', 'Holiday', 'Weekend'].includes(record.status);
                 });
 
-                const showBanner = (override || isSunday) && !anyEmployeeWorked;
+                const isAutoHoliday = employees.every(name => {
+                    const record = matrix[date][name];
+                    return record && record.status === 'Holiday';
+                });
+
+                const isAutoWeekend = employees.every(name => {
+                    const record = matrix[date][name];
+                    return record && record.status === 'Weekend';
+                });
+
+                const isDisplayWeekend = (isWeekendDay || isAutoWeekend) && !anyEmployeeWorked;
+                const showBanner = (override || isDisplayWeekend || isAutoHoliday) && !anyEmployeeWorked;
+                const finalCategory = category || (isAutoHoliday ? 'holiday' : null);
+                const finalEventLabel = override ? override.label.toUpperCase() : (isAutoHoliday ? 'HOLIDAY' : "WEEK-END");
 
                 return (
-                  <tr key={date} className={`matrix-row ${isSunday ? 'weekend-row' : ''} ${override ? 'event-row' : ''}`}>
+                  <tr key={date} className={`matrix-row ${isDisplayWeekend && !override && !isAutoHoliday ? 'weekend-row' : ''} ${override || isAutoHoliday ? 'event-row' : ''}`}>
                     <td className="sticky-date-cell">
                         {date}
-                        {isSunday && !override && <span className="weekend-tag">SUN</span>}
-                        {override && <span className={`event-tag ${category}`}>EVENT</span>}
+                        {isDisplayWeekend && !override && !isAutoHoliday && <span className="weekend-tag">{dateObj.getDay() === 0 ? 'SUN' : 'SAT'}</span>}
+                        {(override || isAutoHoliday) && <span className={`event-tag ${finalCategory}`}>EVENT</span>}
                     </td>
                     {showBanner ? (
-                        <td colSpan={employees.length} className={override ? "event-display-cell" : "weekend-display-cell"}>
-                             <div className={override ? `event-banner ${category}` : "weekend-banner"}>
-                                <span className={override ? "event-text" : "weekend-text"}>{eventLabel}</span>
+                        <td colSpan={employees.length} className={override || isAutoHoliday ? "event-display-cell" : "weekend-display-cell"}>
+                             <div className={override || isAutoHoliday ? `event-banner ${finalCategory}` : "weekend-banner"}>
+                                <span className={override || isAutoHoliday ? "event-text" : "weekend-text"}>{finalEventLabel}</span>
                              </div>
                         </td>
                     ) : (
@@ -116,16 +129,22 @@ const DateGroupedAttendance = ({
                             const record = matrix[date][name];
                             const inTime = record?.inTime;
                             const isLate = record?.isLate;
-                            const isAbsent = record?.status === 'Absent' || !record;
+                            const isNonWorkingAbsence = (isDisplayWeekend || override || isAutoHoliday) && (record?.status === 'Absent' || record?.status === 'Holiday' || record?.status === 'Weekend' || !record);
+                            const isRegularAbsent = !isNonWorkingAbsence && (record?.status === 'Absent' || record?.status === 'Holiday' || !record);
                             
                             // On non-working days, non-arrivals show the label instead of ABSENT
-                            const displayValue = (isSunday || override) && isAbsent 
-                                ? eventLabel 
-                                : isAbsent ? 'ABSENT' : formatTimeToAMPM(inTime);
+                            const displayValue = isNonWorkingAbsence 
+                                ? finalEventLabel 
+                                : isRegularAbsent ? 'ABSENT' : formatTimeToAMPM(inTime);
+
+                            let pillClass = 'ontime';
+                            if (isNonWorkingAbsence) pillClass = 'event-muted';
+                            else if (isRegularAbsent) pillClass = 'absent';
+                            else if (isLate) pillClass = 'late';
 
                             return (
                                 <td key={name} className="matrix-cell">
-                                    <div className={`time-pill ${isLate ? 'late' : isAbsent ? 'absent' : 'ontime'} ${(isSunday || override) && isAbsent ? 'event-muted' : ''}`}>
+                                    <div className={`time-pill ${pillClass}`}>
                                         <span className="time">{displayValue}</span>
                                         {isLate && <span className="late-indicator">!</span>}
                                     </div>

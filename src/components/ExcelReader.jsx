@@ -5,13 +5,14 @@ const ExcelReader = ({ onFileLoaded }) => {
   const [loading, setLoading] = useState(false);
   const [fileName, setFileName] = useState('');
   const [isDragActive, setIsDragActive] = useState(false);
+  const [error, setError] = useState(null);
 
   const processFile = (file) => {
     if (!file) return;
 
     // Validate type (basic check)
     if (!file.name.match(/\.(xlsx|xls)$/)) {
-      alert("Please upload a valid Excel file (.xlsx or .xls)");
+      setError("Please upload a valid Excel file (.xlsx or .xls). This format is not correct.");
       return;
     }
 
@@ -117,11 +118,15 @@ const ExcelReader = ({ onFileLoaded }) => {
         console.log('Total records extracted:', allRecords.length);
         console.log('Sample records:', allRecords.slice(0, 3));
         
-        onFileLoaded(allRecords);
+        if (allRecords.length === 0) {
+            setError("No valid attendance records found in the file. Please ensure it follows the correct format.");
+        } else {
+            onFileLoaded(allRecords);
+        }
 
       } catch (error) {
         console.error("Error reading file:", error);
-        alert("Error reading file");
+        setError("Error reading file. Please ensure the file is not corrupted and follows the correct format.");
       } finally {
         setLoading(false);
       }
@@ -152,28 +157,41 @@ const ExcelReader = ({ onFileLoaded }) => {
   };
 
   return (
-    <div className="excel-reader-container">
-      <div 
-        className={`upload-box ${isDragActive ? 'drag-active' : ''}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <label htmlFor="file-upload" className="custom-file-upload">
-            <div className="icon">📂</div>
-            <div className="text">
-                {loading ? 'Processing...' : 'Click to Upload or Drag File Here'}
-            </div>
-            {fileName && <p className="file-name-tag">Selected: {fileName}</p>}
-        </label>
-        <input 
-          id="file-upload" 
-          type="file" 
-          accept=".xlsx, .xls" 
-          onChange={handleFileChange} 
-        />
+    <>
+      <div className="excel-reader-container">
+        <div 
+          className={`upload-box ${isDragActive ? 'drag-active' : ''}`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <label htmlFor="file-upload" className="custom-file-upload">
+              <div className="icon">📂</div>
+              <div className="text">
+                  {loading ? 'Processing...' : 'Click to Upload or Drag File Here'}
+              </div>
+              {fileName && <p className="file-name-tag">Selected: {fileName}</p>}
+          </label>
+          <input 
+            id="file-upload" 
+            type="file" 
+            accept=".xlsx, .xls" 
+            onChange={handleFileChange} 
+          />
+        </div>
       </div>
-    </div>
+      
+      {error && (
+        <div className="modal-overlay">
+          <div className="modal-content error-modal">
+            <div className="modal-icon">⚠️</div>
+            <h3>Invalid Format</h3>
+            <p>{error}</p>
+            <button className="btn primary" onClick={() => setError(null)}>Close</button>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

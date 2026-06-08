@@ -73,25 +73,37 @@ const exportMatrixSheet = (worksheet, data, colors, eventOverrides) => {
   // 4. Rows Population
   dates.forEach((dateString) => {
     const d = new Date(dateString);
-    const isSunday = d.getDay() === 0;
+    const isWeekendDay = d.getDay() === 0 || d.getDay() === 6;
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
     const localDate = `${year}-${month}-${day}`;
     const override = eventOverrides.find((o) => o.date === localDate);
-    const isHoliday = override && /holiday|leave|vacation|off/i.test(override.type || "");
-
-    // Determine if anyone worked on this day (Sunday/Holiday check)
+    
+    // Check if anyone worked on this day
     const anyEmployeeWorked = employees.some(emp => {
         const record = matrix[dateString][emp];
-        return record && !["Absent", "-"].includes(record.status);
+        return record && !["Absent", "-", "Holiday", "Weekend"].includes(record.status);
     });
+
+    const isAutoHoliday = employees.every(emp => {
+        const record = matrix[dateString][emp];
+        return record && record.status === "Holiday";
+    });
+
+    const isAutoWeekend = employees.every(emp => {
+        const record = matrix[dateString][emp];
+        return record && record.status === "Weekend";
+    });
+
+    const isDisplayWeekend = (isWeekendDay || isAutoWeekend) && !anyEmployeeWorked;
+    const isHoliday = (override && /holiday|leave|vacation|off/i.test(override.type || "")) || isAutoHoliday;
+    const label = override ? override.label : (isHoliday ? "HOLIDAY" : "WEEK-END");
 
     const rowValues = [dateString];
     employees.forEach((emp) => {
         const record = matrix[dateString][emp];
-        const label = override ? override.label : "WEEK-END";
-        const isScheduledDay = !isSunday && !isHoliday;
+        const isScheduledDay = !isDisplayWeekend && !isHoliday;
 
         if (isScheduledDay) {
             stats[emp].working++;
@@ -104,17 +116,17 @@ const exportMatrixSheet = (worksheet, data, colors, eventOverrides) => {
             } else if (record.status === "WFH") {
                 rowValues.push("WFH");
                 stats[emp].present++;
-            } else if (record.status === "Present" || (!["Absent", "-"].includes(record.status) && record.inTime)) {
+            } else if (record.status === "Present" || (!["Absent", "-", "Holiday", "Weekend"].includes(record.status) && record.inTime)) {
                 rowValues.push(formatTimeToAMPM(record.inTime));
                 stats[emp].present++;
                 if (record.isLate) stats[emp].late++;
-            } else if (isHoliday || isSunday) {
+            } else if (isHoliday || isDisplayWeekend) {
                 rowValues.push(label);
             } else {
                 rowValues.push("ABSENT");
                 stats[emp].absent++;
             }
-        } else if (isHoliday || isSunday) {
+        } else if (isHoliday || isDisplayWeekend) {
             rowValues.push(label);
         } else {
             rowValues.push("-");
@@ -141,7 +153,7 @@ const exportMatrixSheet = (worksheet, data, colors, eventOverrides) => {
         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2058A5" } };
         cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10 };
         cell.alignment = { vertical: "middle", horizontal: "center" };
-      } else if ((isHoliday || isSunday) && !anyEmployeeWorked) {
+      } else if ((isHoliday || isDisplayWeekend) && !anyEmployeeWorked) {
         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF00B050" } }; // Green Bar
         cell.font = { bold: true, italic: true, color: { argb: "FFFFFFFF" }, size: 10 };
         cell.alignment = { vertical: "middle", horizontal: "center" };
@@ -157,7 +169,7 @@ const exportMatrixSheet = (worksheet, data, colors, eventOverrides) => {
         } else if (upperVal === "WFH") {
             cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFF00" } }; // Yellow
             cell.font = { bold: true, color: { argb: "FF000000" } };
-        } else if (isHoliday || isSunday) {
+        } else if (isHoliday || isDisplayWeekend) {
             // Individual cell for worked/holiday mix
             cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF00B050" } };
             cell.font = { bold: true, italic: true, color: { argb: "FFFFFFFF" } };
@@ -175,7 +187,7 @@ const exportMatrixSheet = (worksheet, data, colors, eventOverrides) => {
     });
 
     // Merge only if NO ONE worked on this holiday/weekend
-    if ((isHoliday || isSunday) && !anyEmployeeWorked) {
+    if ((isHoliday || isDisplayWeekend) && !anyEmployeeWorked) {
         worksheet.mergeCells(row.number, 2, row.number, totalCols);
     }
   });
@@ -214,6 +226,19 @@ const exportMatrixSheet = (worksheet, data, colors, eventOverrides) => {
         return `${deduction} ${suffix}`;
     }, 
     "FFFF0066"
+  );
+
+  worksheet.addRow([]); // Gap row
+
+  addStatRow("Both Total no of leaves taken & Late coming leaves", 
+    (emp) => {
+        const totalLeaves = stats[emp].absent + (stats[emp].late * 0.25);
+        if (totalLeaves === 0) return "0 Days";
+        let suffix = "Days";
+        if (totalLeaves === 1 || totalLeaves === 0.5) suffix = "Day";
+        return `${totalLeaves} ${suffix}`;
+    }, 
+    "FFFF0000"
   );
 
   // Column width configuration
@@ -500,18 +525,36 @@ export const exportComprehensivePDF = (
       columns = ["Date", ...employees];
       rows = dates.map((date) => {
         const d = new Date(date);
-        const isSunday = d.getDay() === 0;
+        const isWeekendDay = d.getDay() === 0 || d.getDay() === 6;
         const year = d.getFullYear();
         const month = String(d.getMonth() + 1).padStart(2, "0");
         const day = String(d.getDate()).padStart(2, "0");
         const localDate = `${year}-${month}-${day}`;
         const override = eventOverrides.find((o) => o.date === localDate);
 
+        const isAutoHoliday = employees.every(emp => {
+          const record = matrix[date][emp];
+          return record && record.status === "Holiday";
+        });
+
+        const isAutoWeekend = employees.every(emp => {
+          const record = matrix[date][emp];
+          return record && record.status === "Weekend";
+        });
+
+        const anyEmployeeWorked = employees.some(emp => {
+            const record = matrix[date][emp];
+            return record && !["Absent", "-", "Holiday", "Weekend"].includes(record.status);
+        });
+
+        const isDisplayWeekend = (isWeekendDay || isAutoWeekend) && !anyEmployeeWorked;
+
         return [
           date,
           ...employees.map((emp) => {
             if (override) return override.label.toUpperCase();
-            if (isSunday) return "WEEK-END";
+            if (isAutoHoliday) return "HOLIDAY";
+            if (isDisplayWeekend) return "WEEK-END";
             const record = matrix[date][emp];
             if (!record) return "-";
             return record.status === "Absent" ? "ABSENT" : formatTimeToAMPM(record.inTime);
@@ -557,13 +600,13 @@ export const exportComprehensivePDF = (
         // Detect Sunday & Overrides from row data
         const rowData = hookData.row.raw;
         const dateVal = rowData[0];
-        let isSunday = false;
+        let isWeekendDay = false;
         let override = null;
 
         if (dateVal && typeof dateVal === "string") {
           const d = new Date(dateVal);
           if (!isNaN(d.getTime())) {
-            isSunday = d.getDay() === 0;
+            isWeekendDay = d.getDay() === 0 || d.getDay() === 6;
             const year = d.getFullYear();
             const month = String(d.getMonth() + 1).padStart(2, "0");
             const day = String(d.getDate()).padStart(2, "0");
@@ -572,9 +615,24 @@ export const exportComprehensivePDF = (
           }
         }
 
-        if (override) {
-          const isHoliday = /holiday|leave|vacation|off/i.test(
-            override.type || "",
+        let isAutoHoliday = false;
+        let isAutoWeekend = false;
+        if (section.isMatrix && section.data.matrix && section.data.matrix[dateVal]) {
+            isAutoHoliday = section.data.employees.every(emp => {
+                const record = section.data.matrix[dateVal][emp];
+                return record && record.status === "Holiday";
+            });
+            isAutoWeekend = section.data.employees.every(emp => {
+                const record = section.data.matrix[dateVal][emp];
+                return record && record.status === "Weekend";
+            });
+        }
+
+        const isDisplayWeekend = isWeekendDay || isAutoWeekend;
+
+        if (override || isAutoHoliday) {
+          const isHoliday = isAutoHoliday || /holiday|leave|vacation|off/i.test(
+            override?.type || "",
           );
           hookData.cell.styles.fillColor = isHoliday
             ? colors.holiday
@@ -585,10 +643,10 @@ export const exportComprehensivePDF = (
           hookData.cell.styles.fontStyle = "italic";
 
           if (colTitle.includes("status") || section.isMatrix) {
-            hookData.cell.text = [override.label.toUpperCase()];
+            hookData.cell.text = [override ? override.label.toUpperCase() : "HOLIDAY"];
             hookData.cell.styles.fontStyle = "bold";
           }
-        } else if (isSunday) {
+        } else if (isDisplayWeekend) {
           hookData.cell.styles.fillColor = [241, 245, 249]; // Subtle gray
           hookData.cell.styles.textColor = [148, 163, 184]; // Muted text
           hookData.cell.styles.fontStyle = "italic";
